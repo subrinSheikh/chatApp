@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat_App</title>
+  </head>
+  <body>
+    <div id="message-list"></div>
+    <div id="message">
+      <input
+        type="text"
+        placeholder="Pls enter your text here!!"
+        id="inputText"
+      />
+      <button id="btn">Enter</button>
+    </div>
+
+    <!-- importing socket lib to use by client-->
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <!-- using the lib we are connecting -->
+    <script>
+      const socket = io.connect("http://localhost:3000");
+      const userName = prompt("Enter your name");
+      //emit username to the server
+      socket.emit("join", userName);
+      const messageList = document.getElementById("message-list");
+      const message = document.getElementById("message");
+      const inputText = document.getElementById("inputText");
+      const btn = document.getElementById("btn");
+      btn.addEventListener("click", () => {
+        const messages = inputText.value;
+        if (!messages) {
+          alert("Pls enter something");
+        }
+        socket.emit("new-message", messages);
+        const messageElem = document.createElement("li");
+        messageElem.innerText = userName + ":" + messages;
+        messageList.appendChild(messageElem);
+        inputText.value = "";
+      });
+      socket.on('loadMsg',(messages)=>{
+        messages.forEach(msg => {
+        const messageElem = document.createElement("li");
+        messageElem.innerText = new Date(msg.timeStamp).toDateString()+ msg.username + ":" + msg.msg;
+        messageList.appendChild(messageElem);
+        });
+      })
+      //listen broadcast msg add it to list
+      socket.on("boardCast-message", (userMsg) => {
+        const messageElem = document.createElement("li");
+        messageElem.innerText = userMsg.username + ":" + userMsg.messages;
+        messageList.appendChild(messageElem);
+        // inputText.value='';
+      });
+    </script>
+  </body>
+</html>
